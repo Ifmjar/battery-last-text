@@ -37,11 +37,17 @@ def validate_length(text):
 
 
 def write_entry(text, path=OUTPUT_PATH):
-    """Validate the text and write it verbatim to the output file."""
+    """Validate the text, write it verbatim, then read it back to prove
+    the file on disk is exactly the entry (no partial write, no newline
+    added by the writer)."""
     validate_length(text)
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w", encoding="utf-8") as handle:
         handle.write(text)
+    with open(path, "r", encoding="utf-8") as handle:
+        written = handle.read()
+    if written != text:
+        raise ValueError("read-back mismatch: file differs from entry text")
     return path
 
 
@@ -51,6 +57,7 @@ def main():
     except (ValueError, OSError) as exc:
         print(f"failed to write entry: {exc}", file=sys.stderr)
         return 1
+    print(f"{ENTRY_TEXT} ({len(ENTRY_TEXT)} chars)")
     return 0
 
 
